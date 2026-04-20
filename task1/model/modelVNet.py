@@ -1,4 +1,5 @@
 import torch
+import wandb
 from networks.VNet2d import VNet2d
 from networks.VNet3d import VNet3d
 from networks.VNet3dthin import VNet3dthin
@@ -306,7 +307,7 @@ class MutilVNet2dModel(object):
     """
 
     def __init__(self, image_height, image_width, image_channel, numclass, batch_size, loss_name='MutilFocalLoss',
-                 inference=False, model_path=None, amp=True, accum_gradient_iter=1, num_cpu=2, use_cuda=True):
+                 inference=False, model_path=None, amp=True, accum_gradient_iter=1, num_cpu=0, use_cuda=True):
         self.batch_size = batch_size
         self.loss_name = loss_name
         self.accuracyname = 'dice'
@@ -507,6 +508,14 @@ class MutilVNet2dModel(object):
             writer.add_scalar('Valid/loss', avgValidationLoss, e + 1)
             writer.add_scalar('Valid/accu', avgValidationAccu, e + 1)
             writer.flush()
+            # wandb logging
+            wandb_log = {
+                "epoch": e + 1,
+                "train/loss": float(avgTrainLoss),
+                "train/dice": float(avgTrainAccu),
+                "val/loss": float(avgValidationLoss),
+                "val/dice": float(avgValidationAccu),
+            }
             # 4.8、save best_validation_dsc model params
             if avgValidationLoss < best_validation_dsc:
                 best_validation_dsc = avgValidationLoss
@@ -514,7 +523,11 @@ class MutilVNet2dModel(object):
                 # serialize best model to disk
                 torch.save(self.model.state_dict(), MODEL_PATH_best)
                 best_epoch = e
+                wandb_log["val/best_loss"] = float(best_validation_dsc)
+                wandb_log["val/best_epoch"] = best_epoch + 1
             torch.save(self.model.state_dict(), MODEL_PATH)
+            if wandb.run is not None:
+                wandb.log(wandb_log)
             # 4.9、clear cache memory
             self.clear_GPU_cache()
             # 4.10、early stopping
@@ -1423,6 +1436,14 @@ class MutilVNet3dModel(object):
             writer.add_scalar('Valid/loss', avgValidationLoss, e + 1)
             writer.add_scalar('Valid/accu', avgValidationAccu, e + 1)
             writer.flush()
+            # wandb logging
+            wandb_log = {
+                "epoch": e + 1,
+                "train/loss": float(avgTrainLoss),
+                "train/dice": float(avgTrainAccu),
+                "val/loss": float(avgValidationLoss),
+                "val/dice": float(avgValidationAccu),
+            }
             # 4.8、save best_validation_dsc model params
             if avgValidationLoss < best_validation_dsc:
                 best_validation_dsc = avgValidationLoss
@@ -1430,7 +1451,11 @@ class MutilVNet3dModel(object):
                 # serialize best model to disk
                 torch.save(self.model.state_dict(), MODEL_PATH_best)
                 best_epoch = e
+                wandb_log["val/best_loss"] = float(best_validation_dsc)
+                wandb_log["val/best_epoch"] = best_epoch + 1
             torch.save(self.model.state_dict(), MODEL_PATH)
+            if wandb.run is not None:
+                wandb.log(wandb_log)
             # 4.9、clear cache memory
             self.clear_GPU_cache()
             # 4.10、early stopping

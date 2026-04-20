@@ -1,0 +1,18 @@
+# Python cache
+__pycache__/
+*.pyc
+
+# Training logs and outputs
+log/
+wandb/
+
+# Processed data (can regenerate with prepare_data.py)
+dataprocess/processed/
+dataprocess/data/
+
+# Debug logs
+*.log
+
+# Large model files (use git lfs or download separately)
+*.pth
+*.7z
